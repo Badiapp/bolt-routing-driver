@@ -1,8 +1,10 @@
 defmodule Bolt.RoutingDriver.Connection do
   use GenServer
 
+  alias Bolt.Sips
+
   @enforce_keys [:url, :roles]
-  defstruct [:url, :roles, :last_cypher]
+  defstruct [:url, :roles, :conn, :last_cypher]
 
   # API
 
@@ -18,9 +20,20 @@ defmodule Bolt.RoutingDriver.Connection do
     {:via, Registry, {Bolt.RoutingDriver.registry_name(), url}}
   end
 
+  defp basic_auth do
+    [
+      username: System.get_env("NEO4J_USERNAME"),
+      password: System.get_env("NEO4J_PWD")
+    ]
+  end
+
   # Server
 
-  def init(state) do
-    {:ok, state}
+  def init(%__MODULE__{url: url} = state) do
+    sips_name = String.to_atom(url)
+    Sips.start_link(url: url, basic_auth: basic_auth(), name: sips_name)
+    conn = Sips.conn(sips_name)
+
+    {:ok, %__MODULE__{state | conn: conn}}
   end
 end
