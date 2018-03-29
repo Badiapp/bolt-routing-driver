@@ -1,7 +1,7 @@
 defmodule Bolt.RoutingDriver.DynamicSupervisor do
   use DynamicSupervisor
 
-  alias Bolt.RoutingDriver.Connection
+  alias Bolt.RoutingDriver.{Connection, Table}
 
   # API
 
@@ -20,6 +20,7 @@ defmodule Bolt.RoutingDriver.DynamicSupervisor do
   # Server
 
   def init(_) do
+    table = System.get_env("NEO4J_URL") |> Table.for()
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 end

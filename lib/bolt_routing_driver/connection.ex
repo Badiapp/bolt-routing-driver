@@ -15,16 +15,16 @@ defmodule Bolt.RoutingDriver.Connection do
       name: via_tuple(url)
     )
   end
+  
+    def basic_auth do
+      [
+        username: System.get_env("NEO4J_USERNAME"),
+        password: System.get_env("NEO4J_PWD")
+      ]
+    end
 
   defp via_tuple(url) do
     {:via, Registry, {Bolt.RoutingDriver.registry_name(), url}}
-  end
-
-  defp basic_auth do
-    [
-      username: System.get_env("NEO4J_USERNAME"),
-      password: System.get_env("NEO4J_PWD")
-    ]
   end
 
   # Server
