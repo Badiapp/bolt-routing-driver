@@ -8,7 +8,7 @@ defmodule Bolt.RoutingDriver do
 
     children = [
       supervisor(Registry, [:unique, registry_name()]),
-      supervisor(Bolt.RoutingDriver.DynamicSupervisor, [])
+      supervisor(Bolt.RoutingDriver.Supervisor, [])
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]
