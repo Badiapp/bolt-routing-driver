@@ -1,4 +1,4 @@
-defmodule Bolt.RoutingDriver.Supervisor do
+defmodule Bolt.RoutingDriver.Pool do
   use Supervisor
 
   alias Bolt.RoutingDriver.{Connection, Table}
@@ -7,6 +7,30 @@ defmodule Bolt.RoutingDriver.Supervisor do
 
   def start_link do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
+  end
+
+  def connections do
+    Supervisor.which_children(__MODULE__)
+    |> Enum.map(
+      fn {_, pid, _, _} ->
+        Registry.keys(Bolt.RoutingDriver.registry_name(), pid)
+        |> List.first
+        |> Connection.details
+      end
+    )
+  end
+
+  def writer_connections, do: connections_by_role(:writer)
+  def reader_connections, do: connections_by_role(:reader)
+  def router_connections, do: connections_by_role(:router)
+  
+  defp connections_by_role(role) do
+    connections()
+    |> Enum.filter(
+      fn (connection) ->
+        connection.roles |> Enum.member?(role)
+      end
+    )
   end
 
   # Server
