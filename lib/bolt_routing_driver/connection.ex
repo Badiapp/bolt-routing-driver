@@ -2,9 +2,10 @@ defmodule Bolt.RoutingDriver.Connection do
   use GenServer
 
   alias Bolt.Sips
+  alias Bolt.RoutingDriver.Utils
 
   @enforce_keys [:url, :roles]
-  defstruct [:url, :roles, :conn, :last_cypher]
+  defstruct [:url, :roles, :conn, :last_query]
 
   # API
 
@@ -51,6 +52,6 @@ defmodule Bolt.RoutingDriver.Connection do
 
   def handle_call({:execute_query, cypher}, _from, connection) do
     response = Sips.query(connection.conn, cypher)
-    {:reply, response, connection}
+    {:reply, response, %{connection | last_query: Utils.now()}}
   end
 end
