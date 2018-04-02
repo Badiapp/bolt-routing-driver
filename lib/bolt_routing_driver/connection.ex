@@ -5,7 +5,7 @@ defmodule Bolt.RoutingDriver.Connection do
   alias Bolt.RoutingDriver.Utils
 
   @enforce_keys [:url, :roles]
-  defstruct [:url, :roles, :conn, :last_query]
+  defstruct [:url, :roles, :conn, last_query: 0]
 
   # API
 

@@ -21,13 +21,16 @@ defmodule Bolt.RoutingDriver do
 
   def read_query(cypher) do
     RoutingDriver.Pool.reader_connections
-    |> RoutingDriver.LoadBalancer.select
-    |> Map.get(:url)
-    |> RoutingDriver.Connection.query(cypher)
+    |> execute_query(cypher)
   end
 
   def write_query(cypher) do
     RoutingDriver.Pool.writer_connections
+    |> execute_query(cypher)
+  end
+
+  defp execute_query(connections, cypher) do
+    connections
     |> RoutingDriver.LoadBalancer.select
     |> Map.get(:url)
     |> RoutingDriver.Connection.query(cypher)
