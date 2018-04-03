@@ -1,5 +1,5 @@
 defmodule Bolt.RoutingDriver.Table do
-  alias Bolt.RoutingDriver.Connection
+  alias Bolt.RoutingDriver.{Config, Connection}
   alias Bolt.Sips
 
   defstruct addresses: [], ttl: 500
@@ -15,10 +15,8 @@ defmodule Bolt.RoutingDriver.Table do
 
   defp get_servers(url) do
     name = :routing_servers
-    Sips.start_link(
-      url: url, basic_auth: Connection.basic_auth(), name: name
-    )
-    result = Sips.conn(:routing_servers) 
+    Sips.start_link(Config.bolt_sips ++ [url: url, name: name])
+    result = Sips.conn(name)
     |> Sips.query("CALL dbms.cluster.routing.getServers()")
 
     Supervisor.stop(name)

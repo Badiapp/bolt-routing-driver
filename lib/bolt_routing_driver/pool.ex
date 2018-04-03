@@ -1,7 +1,7 @@
 defmodule Bolt.RoutingDriver.Pool do
   use Supervisor
 
-  alias Bolt.RoutingDriver.{Connection, Table}
+  alias Bolt.RoutingDriver.{Config, Connection, Table}
 
   # API
 
@@ -53,7 +53,7 @@ defmodule Bolt.RoutingDriver.Pool do
   end
 
   defp addresses do
-    System.get_env("NEO4J_HOST")
+    Config.url
     |> Table.for()
     |> Map.get(:addresses)
   end

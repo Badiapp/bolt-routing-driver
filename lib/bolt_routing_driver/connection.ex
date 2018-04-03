@@ -2,7 +2,7 @@ defmodule Bolt.RoutingDriver.Connection do
   use GenServer
 
   alias Bolt.Sips
-  alias Bolt.RoutingDriver.Utils
+  alias Bolt.RoutingDriver.{Config, Utils}
 
   @enforce_keys [:url, :roles]
   defstruct [:url, :roles, :conn, last_query: 0]
@@ -24,13 +24,6 @@ defmodule Bolt.RoutingDriver.Connection do
   def query(url, cypher) do
     GenServer.call(via_tuple(url), {:execute_query, cypher})
   end
-  
-  def basic_auth do
-    [
-      username: System.get_env("NEO4J_USER"),
-      password: System.get_env("NEO4J_PASSWORD")
-    ]
-  end
 
   defp via_tuple(url) do
     {:via, Registry, {Bolt.RoutingDriver.registry_name(), url}}
@@ -39,9 +32,9 @@ defmodule Bolt.RoutingDriver.Connection do
   # Server
 
   def init(%__MODULE__{url: url} = connection) do
-    sips_name = String.to_atom(url)
-    Sips.start_link(url: url, basic_auth: basic_auth(), name: sips_name)
-    conn = Sips.conn(sips_name)
+    name = String.to_atom(url)
+    Sips.start_link(Config.bolt_sips ++ [url: url, name: name])
+    conn = Sips.conn(name)
 
     {:ok, %__MODULE__{connection | conn: conn}}
   end
