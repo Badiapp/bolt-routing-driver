@@ -9,8 +9,8 @@ defmodule Bolt.RoutingDriver do
     import Supervisor.Spec, warn: false
 
     children = [
-      supervisor(Registry, [:unique, registry_name()]),
-      supervisor(Bolt.RoutingDriver.Pool, [])
+      Registry.child_spec(keys: :unique, name: registry_name()),
+      RoutingDriver.Pool.child_spec([])
     ]
 
     opts = [strategy: :one_for_one, name: __MODULE__]
