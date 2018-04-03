@@ -15,7 +15,7 @@ defmodule Bolt.RoutingDriver.Table do
 
   defp get_servers(hostname) do
     name = :routing_servers
-    Sips.start_link(Config.bolt_sips() ++ [hostname: hostname, name: name])
+    Sips.start_link(Config.bolt_sips() ++ [url: hostname, name: name])
     result = Sips.conn(name)
     |> Sips.query("CALL dbms.cluster.routing.getServers()")
 

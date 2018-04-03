@@ -45,7 +45,7 @@ defmodule Bolt.RoutingDriver.Pool do
     |> Enum.map(
       fn(%{url: url, roles: roles}) ->
         Supervisor.child_spec(
-          {Connection, url: local_url(url), roles: roles},
+          {Connection, url: url, roles: roles},
           id: url
         )
       end
@@ -53,14 +53,8 @@ defmodule Bolt.RoutingDriver.Pool do
   end
 
   defp addresses do
-    Config.hostname
+    Config.url()
     |> Table.for()
     |> Map.get(:addresses)
-  end
-
-  defp local_url(url) do
-    port = url |> String.split(":") |> Enum.at(1)
-
-    "bolt://localhost:#{port}"
   end
 end
