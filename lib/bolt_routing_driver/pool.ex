@@ -53,7 +53,7 @@ defmodule Bolt.RoutingDriver.Pool do
   end
 
   defp addresses do
-    Config.url
+    Config.hostname
     |> Table.for()
     |> Map.get(:addresses)
   end

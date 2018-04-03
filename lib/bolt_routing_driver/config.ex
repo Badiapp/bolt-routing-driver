@@ -1,5 +1,5 @@
 defmodule Bolt.RoutingDriver.Config do
-  def url, do: get_env(:url)
+  def hostname, do: get_env(:hostname)
 
   def bolt_sips, do: get_env(:bolt_sips)
 

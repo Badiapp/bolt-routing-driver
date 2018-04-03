@@ -6,16 +6,16 @@ defmodule Bolt.RoutingDriver.Table do
 
   @roles %{"WRITE" => :writer, "ROUTE" => :router, "READ" => :reader}
 
-  def for(url) do
-    case get_servers(url) do
-      {ok, response} -> parse_servers_response(response)
+  def for(hostname) do
+    case get_servers(hostname) do
+      {:ok, response} -> parse_servers_response(response)
       {:error, error} -> {:error, error}
     end
   end
 
-  defp get_servers(url) do
+  defp get_servers(hostname) do
     name = :routing_servers
-    Sips.start_link(Config.bolt_sips ++ [url: url, name: name])
+    Sips.start_link(Config.bolt_sips() ++ [hostname: hostname, name: name])
     result = Sips.conn(name)
     |> Sips.query("CALL dbms.cluster.routing.getServers()")
 
