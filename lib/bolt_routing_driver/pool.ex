@@ -12,7 +12,7 @@ defmodule Bolt.RoutingDriver.Pool do
   def connections do
     Supervisor.which_children(__MODULE__)
     |> Enum.map(
-      fn {_, pid, _, _} ->
+      fn ({_, pid, _, _})->
         Registry.keys(Bolt.RoutingDriver.registry_name(), pid)
         |> List.first
         |> Connection.details
@@ -23,7 +23,12 @@ defmodule Bolt.RoutingDriver.Pool do
   def writer_connections, do: connections_by_role(:writer)
   def reader_connections, do: connections_by_role(:reader)
   def router_connections, do: connections_by_role(:router)
-  
+
+  def refresh do
+    delete_existing_connections
+    create_new_connections
+  end
+
   defp connections_by_role(role) do
     connections()
     |> Enum.filter(
@@ -36,14 +41,14 @@ defmodule Bolt.RoutingDriver.Pool do
   # Server
   
   def init(_) do
-    children = initial_connections()
+    children = children_specs()
     Supervisor.init(children, strategy: :one_for_one)
   end
 
-  defp initial_connections do
+  defp children_specs do
     addresses()
     |> Enum.map(
-      fn(%{url: url, roles: roles}) ->
+      fn (%{url: url, roles: roles}) ->
         Supervisor.child_spec(
           {Connection, url: url, roles: roles},
           id: url
@@ -56,5 +61,24 @@ defmodule Bolt.RoutingDriver.Pool do
     Config.url()
     |> Table.for()
     |> Map.get(:addresses)
+  end
+
+  defp create_new_connections do
+    children_specs()
+    |> Enum.each(
+      fn (child_spec) ->
+        Supervisor.start_child(__MODULE__, child_spec)
+      end
+    )
+  end
+
+  defp delete_existing_connections do
+    Supervisor.which_children(__MODULE__)
+    |> Enum.each(
+      fn ({child_id, _, _, _}) ->
+        Supervisor.terminate_child(__MODULE__, child_id)
+        Supervisor.delete_child(__MODULE__, child_id)
+      end
+    )
   end
 end
