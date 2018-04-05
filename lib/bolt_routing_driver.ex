@@ -47,12 +47,12 @@ defmodule Bolt.RoutingDriver do
     |> handle_query_response
   end
 
-  defp handle_query_response({:ok, _} = response), do: response
-
   defp handle_query_response(
     {:error, [code: "Neo.ClientError.Cluster.NotALeader", message: _]}
   ) do
-    RoutingDriver.Table.notify_lead_error()
-    raise RoutingDriver.NotALeaderError
+      RoutingDriver.Table.notify_lead_error()
+      raise RoutingDriver.NotALeaderError
   end
+
+  defp handle_query_response(response), do: response
 end
