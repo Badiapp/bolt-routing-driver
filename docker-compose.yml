@@ -29,7 +29,7 @@ services:
       - NEO4J_dbms_logs_query_parameter__logging__enabled=true
       - NEO4J_dbms_logs_query_threshold=0
     entrypoint: >
-      /bin/bash -ecx "export NEO4J_dbms_connectors_default__advertised__address=core1 && exec /docker-entrypoint.sh \"neo4j\""
+      /bin/bash -ecx "export NEO4J_dbms_connectors_default__advertised__address=core1.docker && exec /docker-entrypoint.sh \"neo4j\""
 
   core2:
     container_name: core2
@@ -56,7 +56,7 @@ services:
       - NEO4J_dbms_logs_query_parameter__logging__enabled=true
       - NEO4J_dbms_logs_query_threshold=0
     entrypoint: >
-      /bin/bash -ecx "export NEO4J_dbms_connectors_default__advertised__address=core2 && exec /docker-entrypoint.sh \"neo4j\""
+      /bin/bash -ecx "export NEO4J_dbms_connectors_default__advertised__address=core2.docker && exec /docker-entrypoint.sh \"neo4j\""
 
   core3:
     container_name: core3
@@ -83,4 +83,4 @@ services:
       - NEO4J_dbms_logs_query_parameter__logging__enabled=true
       - NEO4J_dbms_logs_query_threshold=0
     entrypoint: >
-      /bin/bash -ecx "export NEO4J_dbms_connectors_default__advertised__address=core3 && exec /docker-entrypoint.sh \"neo4j\""
+      /bin/bash -ecx "export NEO4J_dbms_connectors_default__advertised__address=core3.docker && exec /docker-entrypoint.sh \"neo4j\""
