@@ -1,5 +1,6 @@
 defmodule Bolt.RoutingDriver do
   use Application
+  use Retry
 
   alias Bolt.RoutingDriver
 
@@ -26,8 +27,14 @@ defmodule Bolt.RoutingDriver do
   end
 
   def write_query(cypher) do
-    RoutingDriver.Table.writer_connections
-    |> execute_query(cypher)
+    # The following block retries the query every 200 milliseconds and expires	
+    # after 1 second, in order to not return an error to the first query that	
+    # discovers the leader has changed	
+    retry_strategy = 200 |> lin_backoff(1) |> expiry(1_000)	
+    retry with: retry_strategy, rescue_only: [RoutingDriver.NotALeaderError] do	
+      RoutingDriver.Table.writer_connections
+      |> execute_query(cypher)
+    end
   end
 
   defp execute_query(connections, cypher) do
@@ -37,5 +44,15 @@ defmodule Bolt.RoutingDriver do
 
     RoutingDriver.Table.log_query(url)
     RoutingDriver.Connection.query(url, cypher)
+    |> handle_query_response
+  end
+
+  defp handle_query_response({:ok, _} = response), do: response
+
+  defp handle_query_response(
+    {:error, [code: "Neo.ClientError.Cluster.NotALeader", message: _]}
+  ) do
+    RoutingDriver.Table.notify_lead_error()
+    raise RoutingDriver.NotALeaderError
   end
 end

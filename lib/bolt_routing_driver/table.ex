@@ -32,6 +32,10 @@ defmodule Bolt.RoutingDriver.Table do
     GenServer.cast(__MODULE__, {:remove_address, url})
   end
 
+  def notify_lead_error do
+    GenServer.cast(__MODULE__, :notify_lead_error)
+  end
+
   defp connections_by_role(role) do
     GenServer.call(__MODULE__, {:get_connections, role})
   end
@@ -84,6 +88,11 @@ defmodule Bolt.RoutingDriver.Table do
     )
 
     {:noreply, %{table | addresses: updated_addresses}}
+  end
+
+  def handle_cast(:notify_lead_error, table) do
+    Logger.info("[Bolt.RoutingDriver] Role error notified, refreshing table...")
+    {:noreply, check_live_table!(Config.url())}
   end
 
   def handle_info({:refresh_table, url}, _table) do
