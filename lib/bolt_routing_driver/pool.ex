@@ -1,7 +1,8 @@
 defmodule Bolt.RoutingDriver.Pool do
   use Supervisor
 
-  alias Bolt.RoutingDriver.{Config, Connection, Table}
+  alias Bolt.RoutingDriver
+  alias Bolt.RoutingDriver.{Address, Config, Connection, Table}
 
   # API
 
@@ -9,76 +10,46 @@ defmodule Bolt.RoutingDriver.Pool do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
 
-  def connections do
-    Supervisor.which_children(__MODULE__)
-    |> Enum.map(
-      fn ({_, pid, _, _})->
-        Registry.keys(Bolt.RoutingDriver.registry_name(), pid)
-        |> List.first
-        |> Connection.details
-      end
-    )
+  def find_or_create_connection(%Address{url: url} = address) do
+    if connection_process_exists?(address) do
+      {:ok, url}
+    else
+      create_connection_process(address)
+    end
   end
 
-  def writer_connections, do: connections_by_role(:writer)
-  def reader_connections, do: connections_by_role(:reader)
-  def router_connections, do: connections_by_role(:router)
-
-  def refresh do
-    delete_existing_connections
-    create_new_connections
+  defp connection_process_exists?(%Address{url: url}) do
+    case Registry.lookup(RoutingDriver.registry_name(), url) do
+      [] -> false
+      _ -> true
+    end
   end
 
-  defp connections_by_role(role) do
-    connections()
-    |> Enum.filter(
-      fn (connection) ->
-        connection.roles |> Enum.member?(role)
-      end
+  def create_connection_process(%Address{url: url, roles: roles}) do
+    child_spec = Supervisor.child_spec(
+      {Connection, url: url, roles: roles},
+      id: url
     )
+    case Supervisor.start_child(__MODULE__, child_spec) do
+      {:ok, _pid} -> {:ok, url}
+      {:error, error} -> {:error, error}
+    end
   end
 
   # Server
   
   def init(_) do
-    children = children_specs()
-    Supervisor.init(children, strategy: :one_for_one)
+    Supervisor.init(children_specs(), strategy: :one_for_one)
   end
 
   defp children_specs do
     addresses()
     |> Enum.map(
       fn (%{url: url, roles: roles}) ->
-        Supervisor.child_spec(
-          {Connection, url: url, roles: roles},
-          id: url
-        )
+        Supervisor.child_spec({Connection, url: url, roles: roles},id: url)
       end
     )
   end
 
-  defp addresses do
-    Config.url()
-    |> Table.for()
-    |> Map.get(:addresses)
-  end
-
-  defp create_new_connections do
-    children_specs()
-    |> Enum.each(
-      fn (child_spec) ->
-        Supervisor.start_child(__MODULE__, child_spec)
-      end
-    )
-  end
-
-  defp delete_existing_connections do
-    Supervisor.which_children(__MODULE__)
-    |> Enum.each(
-      fn ({child_id, _, _, _}) ->
-        Supervisor.terminate_child(__MODULE__, child_id)
-        Supervisor.delete_child(__MODULE__, child_id)
-      end
-    )
-  end
+  defp addresses, do: Table.get_table() |> Map.get(:addresses)
 end

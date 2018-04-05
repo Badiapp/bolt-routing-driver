@@ -10,6 +10,7 @@ defmodule Bolt.RoutingDriver do
 
     children = [
       Registry.child_spec(keys: :unique, name: registry_name()),
+      RoutingDriver.Table.child_spec(RoutingDriver.Config.url()),
       RoutingDriver.Pool.child_spec([])
     ]
 
@@ -20,19 +21,21 @@ defmodule Bolt.RoutingDriver do
   def registry_name, do: @registry
 
   def read_query(cypher) do
-    RoutingDriver.Pool.reader_connections
+    RoutingDriver.Table.reader_connections
     |> execute_query(cypher)
   end
 
   def write_query(cypher) do
-    RoutingDriver.Pool.writer_connections
+    RoutingDriver.Table.writer_connections
     |> execute_query(cypher)
   end
 
   defp execute_query(connections, cypher) do
-    connections
-    |> RoutingDriver.LoadBalancer.select
-    |> Map.get(:url)
-    |> RoutingDriver.Connection.query(cypher)
+    {:ok, url} = connections
+    |> RoutingDriver.LoadBalancer.select()
+    |> RoutingDriver.Pool.find_or_create_connection()
+
+    RoutingDriver.Table.log_query(url)
+    RoutingDriver.Connection.query(url, cypher)
   end
 end

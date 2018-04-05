@@ -1,20 +1,18 @@
 defmodule Bolt.RoutingDriver.Connection do
   use GenServer
 
+  require Logger
+
   alias Bolt.Sips
   alias Bolt.RoutingDriver.{Config, Utils}
 
-  @enforce_keys [:url, :roles]
-  defstruct [:url, :roles, :conn, last_query: 0]
+  @enforce_keys [:url, :conn]
+  defstruct [:url, :conn, timestamp: 0]
 
   # API
 
   def start_link(url: url, roles: roles) do
-    GenServer.start_link(
-      __MODULE__,
-      %__MODULE__{url: url, roles: roles},
-      name: via_tuple(url)
-    )
+    GenServer.start_link(__MODULE__, url, name: via_tuple(url))
   end
 
   def details(url) do
@@ -31,12 +29,12 @@ defmodule Bolt.RoutingDriver.Connection do
 
   # Server
 
-  def init(%__MODULE__{url: url} = connection) do
+  def init(url) do
     name = String.to_atom(url)
     Sips.start_link(Config.bolt_sips ++ [url: url, name: name])
     conn = Sips.conn(name)
 
-    {:ok, %__MODULE__{connection | conn: conn}}
+    {:ok, %__MODULE__{conn: conn, url: url, timestamp: Utils.now()}}
   end
 
   def handle_call(:get_details, _from, connection) do
@@ -44,7 +42,10 @@ defmodule Bolt.RoutingDriver.Connection do
   end
 
   def handle_call({:execute_query, cypher}, _from, connection) do
+    Logger.debug("[Bolt.RoutingDriver] #{connection.url} query...")
+    Logger.debug(cypher)
     response = Sips.query(connection.conn, cypher)
-    {:reply, response, %{connection | last_query: Utils.now()}}
+
+    {:reply, response, connection}
   end
 end
