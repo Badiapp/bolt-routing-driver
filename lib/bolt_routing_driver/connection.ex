@@ -4,7 +4,7 @@ defmodule Bolt.RoutingDriver.Connection do
   require Logger
 
   alias Bolt.Sips
-  alias Bolt.RoutingDriver.{Config, Utils}
+  alias Bolt.RoutingDriver.{Config, Table, Utils}
 
   @enforce_keys [:url, :conn]
   defstruct [:url, :conn, timestamp: 0]
@@ -30,9 +30,8 @@ defmodule Bolt.RoutingDriver.Connection do
   # Server
 
   def init(url) do
-    name = String.to_atom(url)
-    Sips.start_link(Config.bolt_sips ++ [url: url, name: name])
-    conn = Sips.conn(name)
+    Process.flag(:trap_exit, true)
+    conn = start_sips_conn(url)
 
     {:ok, %__MODULE__{conn: conn, url: url, timestamp: Utils.now()}}
   end
@@ -47,5 +46,16 @@ defmodule Bolt.RoutingDriver.Connection do
     response = Sips.query(connection.conn, cypher)
 
     {:reply, response, connection}
+  end
+
+  def terminate(reason, connection) do
+    Logger.error("[Bolt.RoutingDriver] #{connection.url} disconnected")
+    Table.remove_address(connection.url)
+  end
+
+  defp start_sips_conn(url) do
+    name = String.to_atom(url)
+    Sips.start_link(Config.bolt_sips ++ [url: url, name: name])
+    conn = Sips.conn(name)
   end
 end

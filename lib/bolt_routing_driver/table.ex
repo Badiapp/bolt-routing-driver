@@ -24,12 +24,16 @@ defmodule Bolt.RoutingDriver.Table do
 
   def router_connections, do: connections_by_role(:router)
 
-  defp connections_by_role(role) do
-    GenServer.call(__MODULE__, {:get_connections, role})
-  end
-
   def log_query(url) do
     GenServer.cast(__MODULE__, {:log_query, url})
+  end
+
+  def remove_address(url) do
+    GenServer.cast(__MODULE__, {:remove_address, url})
+  end
+
+  defp connections_by_role(role) do
+    GenServer.call(__MODULE__, {:get_connections, role})
   end
 
   # Server
@@ -66,6 +70,19 @@ defmodule Bolt.RoutingDriver.Table do
         end
       end
     )
+
+    {:noreply, %{table | addresses: updated_addresses}}
+  end
+
+  def handle_cast({:remove_address, url}, table) do
+    Logger.info("[Bolt.RoutingDriver] Removing #{url}...")
+    updated_addresses = table.addresses 
+    |> Enum.reject(
+      fn(%Address{url: address_url}) ->
+        url == address_url
+      end
+    )
+
     {:noreply, %{table | addresses: updated_addresses}}
   end
 

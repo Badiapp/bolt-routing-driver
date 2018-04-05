@@ -46,7 +46,11 @@ defmodule Bolt.RoutingDriver.Pool do
     addresses()
     |> Enum.map(
       fn (%{url: url, roles: roles}) ->
-        Supervisor.child_spec({Connection, url: url, roles: roles},id: url)
+        Supervisor.child_spec(
+          {Connection, url: url, roles: roles},
+          id: url,
+          restart: :temporary
+        )
       end
     )
   end
