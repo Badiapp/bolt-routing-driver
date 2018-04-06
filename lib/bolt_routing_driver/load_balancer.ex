@@ -4,12 +4,12 @@ defmodule Bolt.RoutingDriver.LoadBalancer do
 
   @callback select(connections_list ::  list(%Connection{})) :: %Connection{}
 
-  def select(connections), do: Strategies.Fifo.select(connections)
+  def select(connections), do: Strategies.RoundRobin.select(connections)
 
   def select(connections, strategy) when is_atom(strategy) do
     case strategy do
       :random -> Strategies.Random.select(connections)
-      :fifo -> Strategies.Fifo.select(connections)
+      :round_robin -> Strategies.RoundRobin.select(connections)
       _ -> raise ArgumentError, "Invalid strategy: #{strategy}"
     end
   end

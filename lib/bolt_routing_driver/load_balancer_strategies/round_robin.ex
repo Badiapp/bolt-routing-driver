@@ -1,4 +1,4 @@
-defmodule Bolt.RoutingDriver.LoadBalancer.Strategies.Fifo do
+defmodule Bolt.RoutingDriver.LoadBalancer.Strategies.RoundRobin do
   @behaviour Bolt.RoutingDriver.LoadBalancer
 
   def select(connections) do
