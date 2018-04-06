@@ -8,7 +8,7 @@ defmodule Bolt.RoutingDriver.Table do
 
   defstruct addresses: [], timestamp: Utils.now()
 
-  @ttl 500
+  @ttl 300
 
   # API
 

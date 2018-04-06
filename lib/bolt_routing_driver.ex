@@ -27,10 +27,10 @@ defmodule Bolt.RoutingDriver do
   end
 
   def write_query(cypher) do
-    # The following block retries the query every 200 milliseconds and expires	
-    # after 1 second, in order to not return an error to the first query that	
+    # The following block retries the query every 300 milliseconds and expires	
+    # after 1.800 millseconds, in order to not return an error to the first query that	
     # discovers the leader has changed	
-    retry_strategy = 200 |> lin_backoff(1) |> expiry(1_000)	
+    retry_strategy = 300 |> lin_backoff(1) |> expiry(1_800)	
     retry with: retry_strategy, rescue_only: [RoutingDriver.NotALeaderError] do	
       RoutingDriver.Table.writer_connections
       |> execute_query(cypher)
