@@ -23,7 +23,8 @@ defmodule BoltRoutingDriver.MixProject do
   defp deps do
     [
       {:bolt_sips, git: "https://github.com/Badiapp/bolt_sips", branch: "feature/multiple-and-concurrent-links"},
-      {:retry, "~> 0.8"}
+      {:retry, "~> 0.8"},
+      {:benchee, "~> 0.12", only: :dev}
     ]
   end
 end
