@@ -8,6 +8,7 @@ defmodule Bolt.RoutingDriver.Table do
 
   defstruct addresses: [], timestamp: Utils.now()
 
+  @neo4j_client Config.neo4j_client()
   @ttl 300
 
   # API
@@ -107,9 +108,9 @@ defmodule Bolt.RoutingDriver.Table do
   
   defp get_cluster_servers(url) do
     name = :routing_servers
-    {:ok, pid} = Sips.start_link(Config.bolt_sips() ++ [url: url, name: name])
-    query_result = Sips.conn(name)
-    |> Sips.query("CALL dbms.cluster.routing.getServers()")
+    {:ok, pid} = @neo4j_client.start_link(Config.bolt_sips() ++ [url: url, name: name])
+    query_result = @neo4j_client.conn(name)
+    |> @neo4j_client.query("CALL dbms.cluster.routing.getServers()")
  
     Supervisor.stop(pid)
 

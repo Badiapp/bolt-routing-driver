@@ -25,10 +25,11 @@ defmodule Bolt.RoutingDriver.Pool do
     end
   end
 
-  def create_connection_process(%Address{url: url, roles: roles}) do
+  defp create_connection_process(%Address{url: url, roles: roles}) do
     child_spec = Supervisor.child_spec(
       {Connection, url: url, roles: roles},
-      id: url
+      id: url,
+      restart: :temporary
     )
     case Supervisor.start_child(__MODULE__, child_spec) do
       {:ok, _pid} -> {:ok, url}

@@ -9,14 +9,12 @@ defmodule Bolt.RoutingDriver.Connection do
   @enforce_keys [:url, :conn]
   defstruct [:url, :conn, timestamp: 0]
 
+  @neo4j_client Config.neo4j_client()
+
   # API
 
   def start_link(url: url, roles: roles) do
     GenServer.start_link(__MODULE__, url, name: via_tuple(url))
-  end
-
-  def details(url) do
-    GenServer.call(via_tuple(url), :get_details)
   end
 
   def query(url, cypher) do
@@ -36,14 +34,10 @@ defmodule Bolt.RoutingDriver.Connection do
     {:ok, %__MODULE__{conn: conn, url: url, timestamp: Utils.now()}}
   end
 
-  def handle_call(:get_details, _from, connection) do
-    {:reply, connection, connection}
-  end
-
   def handle_call({:execute_query, cypher}, _from, connection) do
     Logger.debug("[Bolt.RoutingDriver] #{connection.url} query...")
     Logger.debug(cypher)
-    response = Sips.query(connection.conn, cypher)
+    response = @neo4j_client.query(connection.conn, cypher)
 
     {:reply, response, connection}
   end
@@ -55,7 +49,7 @@ defmodule Bolt.RoutingDriver.Connection do
 
   defp start_sips_conn(url) do
     name = String.to_atom(url)
-    Sips.start_link(Config.bolt_sips ++ [url: url, name: name])
-    conn = Sips.conn(name)
+    @neo4j_client.start_link(Config.bolt_sips ++ [url: url, name: name])
+    conn = @neo4j_client.conn(name)
   end
 end
