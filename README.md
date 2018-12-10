@@ -69,3 +69,17 @@ config :bolt_sips, Bolt,
     pool_size: 10
   ]
 ```
+
+## Running locally
+Clone the repository
+
+```bash
+git@github.com:Badiapp/bolt-routing-driver.git
+```
+
+Install dependencies
+
+```bash
+cd bolt-routing-driver
+mix deps.get
+```
