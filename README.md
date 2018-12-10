@@ -33,3 +33,39 @@ iex> Bolt.RoutingDriver.read_query("MATCH (n:Person {name: 'Eduard'}) RETURN n")
 [debug] [Bolt.RoutingDriver] localhost:7689 query...
 {:ok, []}
 ```
+
+## Installation
+The package can be installed as:
+
+#### 1. Add bolt_routing_driver to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [{:bolt_routing_driver, git: "https://github.com/Badiapp/bolt-routing-driver"}]
+end
+```
+
+#### 2. Ensure bolt_routing_driver is started before your application:
+
+```elixir
+def application do
+  [applications: [:bolt_routing_driver], mod: {Bolt.RoutingDriver.Application, []}]
+end
+```
+
+#### 3. Set your configuration
+
+Edit your `config/config.exs` and set the entry URL, and any [bolt_sips config](https://github.com/florinpatrascu/bolt_sips/blob/cf325c2656b7252abc4c87cbe256535c03c27d79/lib/bolt_sips.ex#L18-L49) that you want to change, for example:
+
+```elixir
+config :bolt_sips, Bolt,
+  url: "<YOUR ENTRY URL>"
+  # Any bolt_sips config that you want to change
+   bolt_sips: [
+    basic_auth: [
+      username: "<YOUR USERNAME>",
+      password: "<YOUR PASSWORD>"
+    ],
+    pool_size: 10
+  ]
+```
