@@ -83,3 +83,7 @@ Install dependencies
 cd bolt-routing-driver
 mix deps.get
 ```
+
+## Credit
+- Florin T.Patrascu ([@florinpatrascu](https://github.com/florinpatrascu)), for implementing the Neo4j driver in Elixir: [florinpatrascu/bolt_sips](https://github.com/florinpatrascu/bolt_sips)
+- Adrián Pino ([@adrpino](https://github.com/adrpino)), Eduard López ([@eduardlopez](https://github.com/eduardlopez)) and Xavier Fontrodona ([@xfontro](https://github.com/xfontro)), for inspiring and helping to develop the first implementation of this routing driver.
